@@ -4,6 +4,8 @@
 #include <sstream>
 #include <vector>
 
+#if 0
+
 using CharType = char;
 
 class SourceIterator
@@ -251,3 +253,5 @@ int main(int argc, char **argv)
 
   return 1;
 }
+
+#endif

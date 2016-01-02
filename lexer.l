@@ -1,21 +1,28 @@
-/********************************************************
- * ex1.l
- ********************************************************/
 %{
+#include <stdio.h>
 #include <stdlib.h>
+
+#define YY_DECL int yylex()
+
+#include "parser.hpp"
+
 %}
 
 %option noyywrap
 
 %%
 
-[0-9]+   { yylval.val = atoi(yytext); return NUM; }
-[\+|\-]  { yylval.sym = yytext[0]; return OPA; }
-[\*|/]   { yylval.sym = yytext[0]; return OPM; }
-"("      { return LP; }
-")"      { return RP; }
-";"      { return STOP; }
-<<EOF>>  { return 0; }
-[ \t\n]+ { }
-.        { exit(1); }
+[ \t]	; // ignore all whitespace
+[0-9]+\.[0-9]+ 	{ yylval.fval = atol(yytext);return T_FLOAT; }
+[0-9]+		{ yylval.ival = atoi(yytext); return T_INT; }
+\n		{return T_NEWLINE;}
+"+"		{return T_PLUS;}
+"-"		{return T_MINUS;}
+"*"		{return T_MULTIPLY;}
+"/"		{return T_DIVIDE;}
+"("		{return T_LEFT;}
+")"		{return T_RIGHT;}
+"exit"		{return T_QUIT;}
+"quit"		{return T_QUIT;}
+
 %%
