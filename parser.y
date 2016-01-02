@@ -6,61 +6,56 @@
 extern int yylex();
 extern int yyparse();
 extern FILE* yyin;
+extern char *yytext;
+extern int yylineno;
 
 void yyerror(const char* s);
 %}
 
 %union {
+  char sval[64];
 	int ival;
 	float fval;
 }
 
-%token<ival> T_INT
-%token<fval> T_FLOAT
-%token T_PLUS T_MINUS T_MULTIPLY T_DIVIDE T_LEFT T_RIGHT
-%token T_NEWLINE T_QUIT
-%left T_PLUS T_MINUS
-%left T_MULTIPLY T_DIVIDE
+%token T_LINE_COMMENT T_END_DEFINITION
+%token T_NODE_KEYWORD
+%token<sval> T_IDENTIFIER
+%token T_OPEN_STATEMENT T_CLOSE_STATEMENT
+%token T_OPEN_TEMPLATE T_CLOSE_TEMPLATE
 
-%type<ival> expression
-%type<fval> mixed_expression
+%type<sval> type
 
-%start calculation
+%start file
 
 %%
 
-calculation: 
-	   | calculation line
+file:
+	   | file line
 ;
 
-line: T_NEWLINE
-    | mixed_expression T_NEWLINE { printf("\tResult: %f\n", $1);}
-    | expression T_NEWLINE { printf("\tResult: %i\n", $1); } 
-    | T_QUIT T_NEWLINE { printf("bye!\n"); exit(0); }
+line: T_LINE_COMMENT
+    | node_definition
 ;
 
-mixed_expression: T_FLOAT                 		 { $$ = $1; }
-	  | mixed_expression T_PLUS mixed_expression	 { $$ = $1 + $3; }
-	  | mixed_expression T_MINUS mixed_expression	 { $$ = $1 - $3; }
-	  | mixed_expression T_MULTIPLY mixed_expression { $$ = $1 * $3; }
-	  | mixed_expression T_DIVIDE mixed_expression	 { $$ = $1 / $3; }
-	  | T_LEFT mixed_expression T_RIGHT		 { $$ = $2; }
-	  | expression T_PLUS mixed_expression	 	 { $$ = $1 + $3; }
-	  | expression T_MINUS mixed_expression	 	 { $$ = $1 - $3; }
-	  | expression T_MULTIPLY mixed_expression 	 { $$ = $1 * $3; }
-	  | expression T_DIVIDE mixed_expression	 { $$ = $1 / $3; }
-	  | mixed_expression T_PLUS expression	 	 { $$ = $1 + $3; }
-	  | mixed_expression T_MINUS expression	 	 { $$ = $1 - $3; }
-	  | mixed_expression T_MULTIPLY expression 	 { $$ = $1 * $3; }
-	  | mixed_expression T_DIVIDE expression	 { $$ = $1 / $3; }
+node_definition: T_NODE_KEYWORD T_IDENTIFIER T_OPEN_STATEMENT node_members T_CLOSE_STATEMENT T_END_DEFINITION    { printf("node definition '%s'!\n", $2); }
 ;
 
-expression: T_INT				{ $$ = $1; }
-	  | expression T_PLUS expression	{ $$ = $1 + $3; }
-	  | expression T_MINUS expression	{ $$ = $1 - $3; }
-	  | expression T_MULTIPLY expression	{ $$ = $1 * $3; }
-	  | expression T_DIVIDE expression	{ $$ = $1 / $3; }
-	  | T_LEFT expression T_RIGHT		{ $$ = $2; }
+node_members: node_member
+            | node_members node_member
+
+node_member: node_input
+           | node_output
+;
+
+node_input: type T_IDENTIFIER T_END_DEFINITION    { printf("member definition '%s' called '%s'!\n", $1, $2); }
+;
+
+node_output: type T_IDENTIFIER T_OPEN_STATEMENT T_CLOSE_STATEMENT { printf("output definition '%s' called '%s'!\n", $1, $2); }
+;
+
+type: T_IDENTIFIER                                                { strcpy_s($$, 64, $1); }
+    | T_IDENTIFIER T_OPEN_TEMPLATE T_IDENTIFIER T_CLOSE_TEMPLATE  { strcpy_s($$, 64, $1); }
 ;
 
 %%
@@ -76,7 +71,7 @@ int main(int argv, char **argc) {
 
 	yyin = fp;
 
-	do { 
+	do {
 		yyparse();
 	} while(!feof(yyin));
 
@@ -84,6 +79,6 @@ int main(int argv, char **argc) {
 }
 
 void yyerror(const char* s) {
-	fprintf(stderr, "Parse error: %s\n", s);
+	printf("error on line %d: %s at '%s'\n", yylineno, s, yytext);
 	exit(1);
 }

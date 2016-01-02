@@ -1,36 +1,11 @@
 
 // Example node to add and
-template <typename T> node Math
+node compound
 {
-  T a;
-  T b;
+  float sourceflt;
+  math<float> source;
 
-  T add
+  math<float> computedthing
   {
-    return a + b;
-  }
-
-  T sub
-  {
-    return a - b;
-  }
-
-  T mul
-  {
-    return a * b;
-  }
-};
-
-node Compound
-{
-  float source_flt;
-  Math<float> source;
-
-  Math<float> computed_thing
-  {
-    Math<float> out;
-    out.a = source_flt;
-    out.b = source.add;
-    return out;
   }
 };

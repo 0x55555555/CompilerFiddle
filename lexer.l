@@ -4,25 +4,24 @@
 
 #define YY_DECL int yylex()
 
-#include "parser.hpp"
+#include "parser.h"
 
 %}
 
 %option noyywrap
+%option yylineno
 
 %%
 
-[ \t]	; // ignore all whitespace
-[0-9]+\.[0-9]+ 	{ yylval.fval = atol(yytext);return T_FLOAT; }
-[0-9]+		{ yylval.ival = atoi(yytext); return T_INT; }
-\n		{return T_NEWLINE;}
-"+"		{return T_PLUS;}
-"-"		{return T_MINUS;}
-"*"		{return T_MULTIPLY;}
-"/"		{return T_DIVIDE;}
-"("		{return T_LEFT;}
-")"		{return T_RIGHT;}
-"exit"		{return T_QUIT;}
-"quit"		{return T_QUIT;}
+[ \t\r\n]	; // ignore all whitespace
+\/\/.*      { printf("got a line comment\n"); return T_LINE_COMMENT; }
+node		    { printf("got an node keyword\n"); return T_NODE_KEYWORD; } 
+\{          { printf("got an open keyword\n"); return T_OPEN_STATEMENT; }
+\}          { printf("got an close keyword\n"); return T_CLOSE_STATEMENT; }
+\<          { printf("got an open t keyword\n"); return T_OPEN_TEMPLATE; }
+\>          { printf("got an close t keyword\n"); return T_CLOSE_TEMPLATE; }
+;           { return T_END_DEFINITION; }
+
+[a-z]+   { strcpy_s(yylval.sval, 64, yytext); printf("got a name for a node '%s'\n", yytext); return T_IDENTIFIER; }
 
 %%
